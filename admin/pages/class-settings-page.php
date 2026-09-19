@@ -200,6 +200,15 @@ final class Settings_Page extends Abstract_Page {
 				echo '</select>';
 				break;
 
+			case 'color':
+				printf(
+					'<input type="color" id="%1$s" name="%2$s" value="%3$s" style="width:60px;height:32px;padding:2px;vertical-align:middle;"> <code>%3$s</code>',
+					esc_attr( $id ),
+					esc_attr( $name ),
+					esc_attr( Settings::sanitize_color( (string) $value ) ?: '#1f3a5f' )
+				);
+				break;
+
 			case 'password':
 				$has_value = '' !== (string) $value;
 				printf(

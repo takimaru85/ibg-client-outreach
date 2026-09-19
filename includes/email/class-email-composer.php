@@ -189,8 +189,11 @@ final class Email_Composer {
 	 * @return string
 	 */
 	private function wrap_html( string $body, string $footer, string $subject ): string {
+		$accent = Settings::sanitize_color( (string) $this->settings->get( 'email_accent_color', '' ) ) ?: '#1f3a5f';
+		$font   = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+
 		$footer_block = '' !== $footer
-			? '<div class="ibg-footer" style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e5e5;font-size:12px;line-height:1.5;color:#646970;">' . $footer . '</div>'
+			? '<div class="ibg-footer">' . $this->inline_footer_styles( $footer, $accent ) . '</div>'
 			: '';
 
 		if ( preg_match( '/<body\b/i', $body ) ) {
@@ -199,22 +202,111 @@ final class Email_Composer {
 			return null === $html ? $body . $footer_block : $html;
 		}
 
+		$body = $this->inline_body_styles( $body, $accent, $font );
+
+		$business = (string) $this->settings->get( 'business_name', get_bloginfo( 'name' ) );
+		$site     = (string) $this->settings->get( 'business_website', home_url( '/' ) );
+		$logo     = (string) $this->settings->get( 'email_logo_url', '' );
+
+		$brand = '' !== $logo
+			? '<img src="' . esc_url( $logo ) . '" alt="' . esc_attr( $business ) . '" height="40" style="display:block;height:40px;max-height:40px;width:auto;border:0;outline:none;text-decoration:none;" />'
+			: '<span style="font-family:' . $font . ';font-size:18px;font-weight:700;letter-spacing:0.02em;color:#111827;text-decoration:none;">' . esc_html( $business ) . '</span>';
+		$header = '' !== $site ? '<a href="' . esc_url( $site ) . '" style="text-decoration:none;color:#111827;">' . $brand . '</a>' : $brand;
+
 		$wrapper = '<!DOCTYPE html>'
-			. '<html lang="' . esc_attr( str_replace( '_', '-', get_locale() ) ) . '">'
-			. '<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-			. '<title>' . esc_html( $subject ) . '</title></head>'
-			. '<body style="margin:0;padding:0;background:#f4f4f5;">'
-			. '<div style="max-width:600px;margin:0 auto;padding:24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1d2327;">'
-			. '{{body}}{{footer}}'
-			. '</div></body></html>';
+			. '<html lang="' . esc_attr( str_replace( '_', '-', get_locale() ) ) . '" xmlns:o="urn:schemas-microsoft-com:office:office">'
+			. '<head>'
+			. '<meta charset="UTF-8">'
+			. '<meta name="viewport" content="width=device-width, initial-scale=1">'
+			. '<meta name="x-apple-disable-message-reformatting">'
+			. '<meta name="color-scheme" content="light">'
+			. '<title>' . esc_html( $subject ) . '</title>'
+			. '<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->'
+			. '<style>'
+			. 'body{margin:0;padding:0;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}'
+			. 'table{border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0;}'
+			. 'img{border:0;line-height:100%;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;}'
+			. '@media only screen and (max-width:620px){.ibg-container{width:100%!important;}.ibg-card{padding:28px 22px!important;}}'
+			. '</style>'
+			. '</head>'
+			. '<body style="margin:0;padding:0;background-color:#f3f4f6;">'
+			. '<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f3f4f6;">{{preheader}}</div>'
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f4f6;">'
+			. '<tr><td align="center" style="padding:32px 16px;">'
+			. '<table role="presentation" class="ibg-container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">'
+			// Header.
+			. '<tr><td align="left" style="padding:0 4px 20px;">{{header}}</td></tr>'
+			// Accent bar + card.
+			. '<tr><td style="background-color:' . $accent . ';height:4px;font-size:0;line-height:0;border-radius:8px 8px 0 0;">&nbsp;</td></tr>'
+			. '<tr><td class="ibg-card" style="background-color:#ffffff;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 8px 8px;padding:40px;font-family:' . $font . ';font-size:16px;line-height:1.65;color:#1f2937;">'
+			. '{{body}}'
+			. '</td></tr>'
+			// Footer.
+			. '<tr><td align="center" style="padding:28px 12px 0;font-family:' . $font . ';font-size:12px;line-height:1.6;color:#6b7280;">{{footer}}</td></tr>'
+			. '</table>'
+			. '</td></tr></table>'
+			. '</body></html>';
 
 		/**
-		 * Filter the HTML wrapper. Must contain {{body}} and {{footer}} placeholders.
+		 * Filter the HTML wrapper. Must contain {{body}} and {{footer}} placeholders;
+		 * {{header}} and {{preheader}} are optional.
 		 *
 		 * @param string $wrapper Wrapper HTML.
 		 */
 		$wrapper = (string) apply_filters( 'ibg_outreach_email_wrapper', $wrapper );
 
-		return str_replace( array( '{{body}}', '{{footer}}' ), array( $body, $footer_block ), $wrapper );
+		$preheader = mb_substr( trim( wp_strip_all_tags( Html_To_Text::convert( $body ) ) ), 0, 120 );
+
+		return str_replace(
+			array( '{{body}}', '{{footer}}', '{{header}}', '{{preheader}}' ),
+			array( $body, $footer_block, $header, esc_html( $preheader ) ),
+			$wrapper
+		);
+	}
+
+	/**
+	 * Add inline styles to common body elements that carry none, so the message
+	 * renders consistently in clients that strip <style> (Gmail, Outlook).
+	 *
+	 * @param string $html   Body HTML.
+	 * @param string $accent Accent colour (hex).
+	 * @param string $font   Font stack.
+	 * @return string
+	 */
+	private function inline_body_styles( string $html, string $accent, string $font ): string {
+		$rules = array(
+			'p'  => 'margin:0 0 18px;',
+			'h1' => 'margin:0 0 20px;font-size:26px;line-height:1.3;font-weight:700;color:#111827;',
+			'h2' => 'margin:28px 0 14px;font-size:21px;line-height:1.35;font-weight:700;color:#111827;',
+			'h3' => 'margin:24px 0 10px;font-size:17px;line-height:1.4;font-weight:700;color:#111827;',
+			'ul' => 'margin:0 0 18px;padding-left:22px;',
+			'ol' => 'margin:0 0 18px;padding-left:22px;',
+			'li' => 'margin:0 0 6px;',
+			'a'  => 'color:' . $accent . ';text-decoration:underline;',
+			'hr' => 'border:0;border-top:1px solid #e5e7eb;margin:28px 0;',
+			'blockquote' => 'margin:0 0 18px;padding:12px 18px;border-left:3px solid ' . $accent . ';background:#f9fafb;color:#374151;',
+		);
+
+		foreach ( $rules as $tag => $style ) {
+			// Only tags without an existing style attribute.
+			$html = (string) preg_replace( '/<' . $tag . '(?![a-z0-9])((?:(?!style=)[^>])*)>/i', '<' . $tag . '$1 style="' . $style . '">', $html );
+		}
+
+		// Images: responsive by default.
+		$html = (string) preg_replace( '/<img(?![^>]*style=)([^>]*)>/i', '<img$1 style="max-width:100%;height:auto;display:block;">', $html );
+
+		return $html;
+	}
+
+	/**
+	 * Inline styles for the footer paragraphs and links.
+	 *
+	 * @param string $html   Footer HTML.
+	 * @param string $accent Accent colour.
+	 * @return string
+	 */
+	private function inline_footer_styles( string $html, string $accent ): string {
+		$html = (string) preg_replace( '/<p(?![^>]*style=)([^>]*)>/i', '<p$1 style="margin:0 0 10px;">', $html );
+		return (string) preg_replace( '/<a(?![^>]*style=)([^>]*)>/i', '<a$1 style="color:' . $accent . ';text-decoration:underline;">', $html );
 	}
 }

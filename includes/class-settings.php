@@ -91,6 +91,8 @@ final class Settings {
 			'from_name'                => (string) get_bloginfo( 'name' ),
 			'from_email'               => (string) get_option( 'admin_email', '' ),
 			'reply_to'                 => '',
+			'email_logo_url'           => '',
+			'email_accent_color'       => '#1f3a5f',
 			// Email delivery.
 			'provider'                 => 'wp_mail',
 			'batch_size'               => 25,
@@ -204,6 +206,16 @@ final class Settings {
 						'label'       => __( 'Reply-To', 'ibg-client-outreach' ),
 						'type'        => 'email',
 						'description' => __( 'Optional. Leave blank to use the From Email.', 'ibg-client-outreach' ),
+					),
+					'email_logo_url'   => array(
+						'label'       => __( 'Email Logo URL', 'ibg-client-outreach' ),
+						'type'        => 'url',
+						'description' => __( 'Shown at the top of every email (about 40px tall; upload a PNG/SVG to the Media Library and paste its URL). Leave blank to show the business name as text.', 'ibg-client-outreach' ),
+					),
+					'email_accent_color' => array(
+						'label'       => __( 'Email Accent Colour', 'ibg-client-outreach' ),
+						'type'        => 'color',
+						'description' => __( 'Used for the top bar and links in emails.', 'ibg-client-outreach' ),
 					),
 				),
 			),
@@ -457,6 +469,10 @@ final class Settings {
 				}
 				return $current ?? ( $field['default'] ?? array_key_first( $options ) );
 
+			case 'color':
+				$color = self::sanitize_color( (string) $value );
+				return '' !== $color ? $color : (string) ( $current ?? ( $field['default'] ?? '' ) );
+
 			case 'password':
 				// Blank means "keep the saved secret"; the form never echoes it back.
 				$value = (string) $value;
@@ -475,6 +491,17 @@ final class Settings {
 			default:
 				return sanitize_text_field( (string) $value );
 		}
+	}
+
+	/**
+	 * Validate a hex colour (#rgb or #rrggbb).
+	 *
+	 * @param string $value Input.
+	 * @return string Normalised "#rrggbb"/"#rgb" or '' when invalid.
+	 */
+	public static function sanitize_color( string $value ): string {
+		$value = trim( $value );
+		return preg_match( '/^#([A-Fa-f0-9]{3}){1,2}$/', $value ) ? strtolower( $value ) : '';
 	}
 
 	/**

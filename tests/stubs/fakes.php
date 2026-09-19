@@ -36,6 +36,9 @@ namespace IBG\Outreach {
 		public function get_secret( string $key ): string {
 			return Secrets::decrypt( (string) $this->get( $key, '' ) );
 		}
+		public static function sanitize_color( string $value ): string {
+			return preg_match( '/^#([A-Fa-f0-9]{3}){1,2}$/', trim( $value ) ) ? strtolower( trim( $value ) ) : '';
+		}
 	}
 }
 
