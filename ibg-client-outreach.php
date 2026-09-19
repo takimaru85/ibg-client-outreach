@@ -3,7 +3,7 @@
  * Plugin Name:       IBG Client Outreach
  * Plugin URI:        https://ibgolden.com/
  * Description:       A lightweight CRM and permission-aware email outreach system for managing business contacts and sending compliant campaigns.
- * Version:           0.1.0
+ * Version:           1.0.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Ian Olden, IB Golden
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'IBG_OUTREACH_VERSION', '0.1.0' );
+define( 'IBG_OUTREACH_VERSION', '1.0.0' );
 define( 'IBG_OUTREACH_DB_VERSION', '1.1.0' );
 define( 'IBG_OUTREACH_FILE', __FILE__ );
 define( 'IBG_OUTREACH_PATH', plugin_dir_path( __FILE__ ) );
