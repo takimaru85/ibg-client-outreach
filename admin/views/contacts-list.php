@@ -23,6 +23,7 @@ $ibg_table = $data['table'];
 	<h1 class="wp-heading-inline"><?php esc_html_e( 'Contacts', 'ibg-client-outreach' ); ?></h1>
 	<?php if ( $data['can_manage'] ) : ?>
 		<a href="<?php echo esc_url( $ibg_page->get_url( array( 'view' => 'add' ) ) ); ?>" class="page-title-action"><?php esc_html_e( 'Add New', 'ibg-client-outreach' ); ?></a>
+		<a href="<?php echo esc_url( $data['export_url'] ); ?>" class="page-title-action" title="<?php esc_attr_e( 'Exports the contacts matching the current filters', 'ibg-client-outreach' ); ?>"><?php esc_html_e( 'Export CSV', 'ibg-client-outreach' ); ?></a>
 	<?php endif; ?>
 	<hr class="wp-header-end">
 

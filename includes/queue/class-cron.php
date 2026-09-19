@@ -125,6 +125,7 @@ final class Cron {
 
 		$this->plugin->get( 'logs' )->cleanup( (int) $settings->get( 'log_retention_days', 90 ) );
 		$this->plugin->get( 'queue' )->cleanup( (int) $settings->get( 'queue_retention_days', 30 ) );
+		$this->plugin->get( 'events' )->cleanup_engagement( (int) $settings->get( 'log_retention_days', 90 ) );
 
 		$dir = Import_Storage::get_dir();
 		if ( ! is_wp_error( $dir ) ) {

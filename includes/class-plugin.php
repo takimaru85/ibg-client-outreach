@@ -14,6 +14,8 @@ namespace IBG\Outreach;
 use IBG\Outreach\Analytics\Stats_Repository;
 use IBG\Outreach\Analytics\Tracking;
 use IBG\Outreach\Campaigns\Audience_Resolver;
+use IBG\Outreach\Privacy\Erasure_Service;
+use IBG\Outreach\Privacy\Privacy;
 use IBG\Outreach\Rest\Rest_Api;
 use IBG\Outreach\Campaigns\Campaign_Repository;
 use IBG\Outreach\Campaigns\Campaign_Service;
@@ -158,6 +160,7 @@ final class Plugin {
 		}
 
 		$this->get( 'rest_api' )->register();
+		$this->get( 'privacy' )->register();
 
 		if ( is_admin() ) {
 			// Keep the schema current after plugin updates (activation hooks don't run on update).
@@ -374,6 +377,31 @@ final class Plugin {
 		$this->register( 'webhooks', static fn( Plugin $p ): Webhook_Endpoint => new Webhook_Endpoint( $p->get( 'providers' ), $p->get( 'delivery_events' ) ) );
 
 		$this->register( 'rest_api', static fn( Plugin $p ): Rest_Api => new Rest_Api( $p ) );
+
+		$this->register(
+			'erasure',
+			static fn( Plugin $p ): Erasure_Service => new Erasure_Service(
+				$p->get( 'contacts' ),
+				$p->get( 'contact_service' ),
+				$p->get( 'events' ),
+				$p->get( 'logs' ),
+				$p->get( 'queue' ),
+				$p->get( 'suppressions' )
+			)
+		);
+
+		$this->register(
+			'privacy',
+			static fn( Plugin $p ): Privacy => new Privacy(
+				$p->get( 'contacts' ),
+				$p->get( 'lists' ),
+				$p->get( 'events' ),
+				$p->get( 'logs' ),
+				$p->get( 'queue' ),
+				$p->get( 'suppressions' ),
+				$p->get( 'erasure' )
+			)
+		);
 
 		$this->register(
 			'importer',

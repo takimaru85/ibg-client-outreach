@@ -239,6 +239,26 @@ final class Email_Log_Repository {
 	}
 
 	/**
+	 * Strip personal data from log rows (erasure). Campaign statistics are
+	 * unaffected because they live on the campaign row.
+	 *
+	 * @param int    $contact_id Contact id (0 to match by email only).
+	 * @param string $email      Normalised email (matches test sends too).
+	 * @return int Rows anonymised.
+	 */
+	public function anonymize( int $contact_id, string $email ): int {
+		$wpdb   = $this->db->wpdb();
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$this->db->table( 'email_logs' )} SET email = '', contact_id = 0, provider_message_id = NULL WHERE contact_id = %d OR email = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$contact_id > 0 ? $contact_id : -1,
+				$email
+			)
+		);
+		return false === $result ? 0 : (int) $result;
+	}
+
+	/**
 	 * Delete logs older than N days.
 	 *
 	 * @param int $days Retention days.

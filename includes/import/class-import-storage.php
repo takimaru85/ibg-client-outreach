@@ -60,6 +60,12 @@ final class Import_Storage {
 		if ( ! file_exists( $dir . 'index.php' ) ) {
 			file_put_contents( $dir . 'index.php', "<?php\n// Silence is golden.\n" );
 		}
+		if ( ! file_exists( $dir . 'web.config' ) ) {
+			file_put_contents(
+				$dir . 'web.config',
+				"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<system.webServer>\n\t\t<authorization>\n\t\t\t<deny users=\"*\" />\n\t\t</authorization>\n\t</system.webServer>\n</configuration>\n"
+			);
+		}
 		// phpcs:enable
 
 		return $dir;

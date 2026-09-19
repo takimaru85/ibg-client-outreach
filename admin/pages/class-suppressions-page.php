@@ -14,6 +14,7 @@ use IBG\Outreach\Admin\Tables\Suppressions_List_Table;
 use IBG\Outreach\Capabilities;
 use IBG\Outreach\Contacts\Contact;
 use IBG\Outreach\Contacts\Contact_Service;
+use IBG\Outreach\Csv;
 use IBG\Outreach\Unsubscribe\Suppression_Repository;
 
 defined( 'ABSPATH' ) || exit;
@@ -141,17 +142,12 @@ final class Suppressions_Page extends Abstract_Page {
 			wp_die( esc_html__( 'Sorry, you are not allowed to do that.', 'ibg-client-outreach' ), 403 );
 		}
 
-		nocache_headers();
-		header( 'Content-Type: text/csv; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename="ibg-suppressions-' . gmdate( 'Y-m-d' ) . '.csv"' );
-
-		$out = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-		fputcsv( $out, array( 'email', 'email_hash', 'reason', 'source', 'created_at_utc' ) );
+		$csv = new Csv( 'ibg-suppressions-' . gmdate( 'Y-m-d' ) . '.csv' );
+		$csv->row( array( 'email', 'email_hash', 'reason', 'source', 'created_at_utc' ) );
 		foreach ( $this->plugin->get( 'suppressions' )->iterate() as $row ) {
-			fputcsv( $out, array( (string) $row->email, (string) $row->email_hash, (string) $row->reason, (string) $row->source, (string) $row->created_at ) );
+			$csv->row( array( (string) $row->email, (string) $row->email_hash, (string) $row->reason, (string) $row->source, (string) $row->created_at ) );
 		}
-		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-		exit;
+		$csv->finish();
 	}
 
 	/**

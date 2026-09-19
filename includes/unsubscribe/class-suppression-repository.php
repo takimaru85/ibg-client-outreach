@@ -283,6 +283,31 @@ final class Suppression_Repository {
 	}
 
 	/**
+	 * Erase the plain email from a suppression row, keeping the hash so the
+	 * opt-out is still honoured if the address is ever re-imported.
+	 *
+	 * @param string $email Normalised email.
+	 * @return bool True when a row was anonymised.
+	 */
+	public function anonymize( string $email ): bool {
+		if ( '' === $email ) {
+			return false;
+		}
+		$wpdb   = $this->db->wpdb();
+		$result = $wpdb->update(
+			$this->db->table( 'suppressions' ),
+			array(
+				'email'      => null,
+				'contact_id' => null,
+			),
+			array( 'email_hash' => self::hash( $email ) ),
+			array( '%s', '%d' ),
+			array( '%s' )
+		);
+		return false !== $result && $result > 0;
+	}
+
+	/**
 	 * Delete a row by id (admin removal of an entry with no contact record).
 	 *
 	 * @param int $id Row id.

@@ -178,6 +178,7 @@ $ibg_event_labels = array(
 					<?php submit_button( $ibg_is_edit ? __( 'Update Contact', 'ibg-client-outreach' ) : __( 'Add Contact', 'ibg-client-outreach' ), 'primary', 'submit', false ); ?>
 					<?php if ( $ibg_is_edit ) : ?>
 						<a href="<?php echo esc_url( $data['page']->get_delete_url( $ibg_contact->id ) ); ?>" class="button button-link-delete" data-ibg-confirm="<?php esc_attr_e( 'Delete this contact? This cannot be undone. If the address is suppressed, the suppression will be kept.', 'ibg-client-outreach' ); ?>"><?php esc_html_e( 'Delete', 'ibg-client-outreach' ); ?></a>
+						<a href="<?php echo esc_url( $data['page']->get_erase_url( $ibg_contact->id ) ); ?>" class="button button-link-delete" title="<?php esc_attr_e( 'For data-subject requests: deletes the contact and its activity, and removes the email address from logs and queue rows. The suppression hash is kept.', 'ibg-client-outreach' ); ?>" data-ibg-confirm="<?php esc_attr_e( 'Erase all personal data for this contact (GDPR request)? Logs and queue rows are anonymised; only an irreversible suppression hash is kept. This cannot be undone.', 'ibg-client-outreach' ); ?>"><?php esc_html_e( 'Erase personal data', 'ibg-client-outreach' ); ?></a>
 					<?php endif; ?>
 				</p>
 			</div>

@@ -102,6 +102,39 @@ final class Event_Repository {
 	}
 
 	/**
+	 * All events for a contact (privacy export).
+	 *
+	 * @param int $contact_id Contact id.
+	 * @return array<int, object>
+	 */
+	public function get_all_for_contact( int $contact_id ): array {
+		return $this->get_for_contact( $contact_id, 5000 );
+	}
+
+	/**
+	 * Delete engagement events older than N days (retention). Audit events
+	 * (status changes, unsubscribes, campaign lifecycle) are kept.
+	 *
+	 * @param int $days Retention days.
+	 * @return int Rows deleted.
+	 */
+	public function cleanup_engagement( int $days ): int {
+		$wpdb   = $this->db->wpdb();
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - max( 1, $days ) * DAY_IN_SECONDS );
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$this->db->table( 'events' )} WHERE event_type IN (%s, %s, %s, %s) AND created_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				'email.opened',
+				'email.clicked',
+				'email.delivered',
+				'email.soft_bounced',
+				$cutoff
+			)
+		);
+		return false === $result ? 0 : (int) $result;
+	}
+
+	/**
 	 * Delete events for contacts (used on contact deletion / erasure).
 	 *
 	 * @param int[] $contact_ids Contact ids.

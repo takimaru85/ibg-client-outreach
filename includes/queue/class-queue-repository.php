@@ -459,6 +459,31 @@ final class Queue_Repository {
 	}
 
 	/**
+	 * Strip personal data from a contact's queue rows (erasure). Pending rows
+	 * are skipped so nothing is sent to an erased person.
+	 *
+	 * @param int $contact_id Contact id.
+	 * @return int Rows anonymised.
+	 */
+	public function anonymize_contact( int $contact_id ): int {
+		$wpdb   = $this->db->wpdb();
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$this->db->table( 'email_queue' )} SET email = '', error_message = %s,
+				status = CASE WHEN status IN (%s, %s) THEN %s ELSE status END,
+				lock_token = NULL, locked_at = NULL
+				WHERE contact_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				'Personal data erased',
+				Queue_Item::STATUS_PENDING,
+				Queue_Item::STATUS_SENDING,
+				Queue_Item::STATUS_SKIPPED,
+				$contact_id
+			)
+		);
+		return false === $result ? 0 : (int) $result;
+	}
+
+	/**
 	 * Delete finished rows older than N days.
 	 *
 	 * @param int $days Retention days.

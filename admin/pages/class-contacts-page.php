@@ -10,6 +10,7 @@ namespace IBG\Outreach\Admin\Pages;
 use IBG\Outreach\Admin\Tables\Contacts_List_Table;
 use IBG\Outreach\Capabilities;
 use IBG\Outreach\Contacts\Contact;
+use IBG\Outreach\Csv;
 use IBG\Outreach\Contacts\Contact_Repository;
 use IBG\Outreach\Contacts\Contact_Service;
 use IBG\Outreach\Events\Event_Repository;
@@ -25,8 +26,11 @@ final class Contacts_Page extends Abstract_Page {
 
 	public const SLUG = 'ibg-outreach-contacts';
 
-	private const NONCE_SAVE   = 'ibg_save_contact';
-	private const NONCE_DELETE = 'ibg_delete_contact_';
+	private const NONCE_SAVE    = 'ibg_save_contact';
+	private const NONCE_DELETE  = 'ibg_delete_contact_';
+	private const NONCE_ERASE   = 'ibg_erase_contact_';
+	private const NONCE_EXPORT  = 'ibg_export_contacts';
+	private const EXPORT_ACTION = 'ibg_outreach_export_contacts';
 
 	/**
 	 * List table (built in load()).
@@ -76,12 +80,101 @@ final class Contacts_Page extends Abstract_Page {
 
 	/** @inheritDoc */
 	public function register_hooks(): void {
+		add_action( 'admin_post_' . self::EXPORT_ACTION, array( $this, 'export' ) );
 		add_filter(
 			'set_screen_option_' . Contacts_List_Table::PER_PAGE_OPTION,
 			static fn( $status, $option, $value ): int => max( 1, min( 500, (int) $value ) ),
 			10,
 			3
 		);
+	}
+
+	/**
+	 * Nonce-protected erase URL (delete + anonymise logs/queue; suppression hash kept).
+	 *
+	 * @param int $id Contact id.
+	 * @return string
+	 */
+	public function get_erase_url( int $id ): string {
+		return wp_nonce_url(
+			$this->get_url(
+				array(
+					'action' => 'erase',
+					'id'     => $id,
+				)
+			),
+			self::NONCE_ERASE . $id
+		);
+	}
+
+	/**
+	 * Export URL carrying the current list filters.
+	 *
+	 * @param array<string, string> $filters Filters.
+	 * @return string
+	 */
+	public function get_export_url( array $filters ): string {
+		$args = array_intersect_key( $filters, array_flip( array( 's', 'contact_status', 'marketing_status', 'industry', 'country', 'source', 'date_from', 'date_to', 'list_id' ) ) );
+		return wp_nonce_url( add_query_arg( array_merge( array( 'action' => self::EXPORT_ACTION ), $args ), admin_url( 'admin-post.php' ) ), self::NONCE_EXPORT );
+	}
+
+	/**
+	 * admin-post: stream the filtered contacts as CSV.
+	 *
+	 * @return void
+	 */
+	public function export(): void {
+		check_admin_referer( self::NONCE_EXPORT );
+		if ( ! current_user_can( Capabilities::MANAGE_CONTACTS ) ) {
+			wp_die( esc_html__( 'Sorry, you are not allowed to do that.', 'ibg-client-outreach' ), 403 );
+		}
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- verified above.
+		$args = array();
+		foreach ( array( 'contact_status', 'marketing_status', 'industry', 'country', 'source', 'date_from', 'date_to' ) as $key ) {
+			if ( isset( $_GET[ $key ] ) && '' !== $_GET[ $key ] ) {
+				$args[ $key ] = sanitize_text_field( wp_unslash( $_GET[ $key ] ) );
+			}
+		}
+		if ( isset( $_GET['s'] ) && '' !== $_GET['s'] ) {
+			$args['search'] = sanitize_text_field( wp_unslash( $_GET['s'] ) );
+		}
+		$list_id = isset( $_GET['list_id'] ) ? absint( wp_unslash( $_GET['list_id'] ) ) : 0;
+		// phpcs:enable
+
+		if ( $list_id > 0 ) {
+			$list = $this->plugin->get( 'lists' )->find( $list_id );
+			if ( $list ) {
+				$args = array_merge( $this->plugin->get( 'list_service' )->get_audience_args( $list ), $args );
+			}
+		}
+
+		$lists     = $this->plugin->get( 'lists' );
+		$all_lists = $lists->all( Contact_List::TYPE_STATIC );
+		$repo      = $this->plugin->get( 'contacts' );
+
+		$csv = new Csv( 'ibg-contacts-' . gmdate( 'Y-m-d' ) . '.csv' );
+		$csv->row( array( 'id', 'email', 'first_name', 'last_name', 'full_name', 'company', 'website', 'phone', 'country', 'industry', 'source', 'contact_status', 'marketing_status', 'email_status', 'consent_basis', 'consent_at_utc', 'unsubscribed_at_utc', 'last_contacted_at_utc', 'created_at_utc', 'lists', 'notes' ) );
+
+		$after = 0;
+		while ( true ) {
+			$ids = $repo->get_ids( $args, $after, 500 );
+			if ( empty( $ids ) ) {
+				break;
+			}
+			foreach ( $repo->find_many( $ids ) as $c ) {
+				$names = array();
+				foreach ( $lists->get_list_ids_for_contact( $c->id ) as $lid ) {
+					if ( isset( $all_lists[ $lid ] ) ) {
+						$names[] = $all_lists[ $lid ]->name;
+					}
+				}
+				$csv->row( array( $c->id, $c->email, $c->first_name, $c->last_name, $c->full_name, $c->company, $c->website, $c->phone, $c->country, $c->industry, $c->source, $c->contact_status, $c->marketing_status, $c->email_status, $c->consent_basis, (string) $c->consent_at, (string) $c->unsubscribed_at, (string) $c->last_contacted_at, $c->created_at, implode( '|', $names ), $c->notes ) );
+			}
+			$after = max( $ids );
+		}
+
+		$csv->finish();
 	}
 
 	/**
@@ -127,6 +220,7 @@ final class Contacts_Page extends Abstract_Page {
 			);
 
 			$this->handle_single_delete();
+			$this->handle_erase();
 			$this->handle_bulk_action();
 			$this->redirect_clean_filter_form();
 			return;
@@ -150,6 +244,7 @@ final class Contacts_Page extends Abstract_Page {
 					'page'       => $this,
 					'table'      => $this->table,
 					'can_manage' => current_user_can( Capabilities::MANAGE_CONTACTS ),
+					'export_url' => $this->get_export_url( $this->table->get_filter_args() ),
 				)
 			);
 			return;
@@ -306,6 +401,44 @@ final class Contacts_Page extends Abstract_Page {
 		);
 
 		wp_safe_redirect( $this->get_url( $this->preserved_filters() ) );
+		exit;
+	}
+
+	/**
+	 * Erase personal data for a contact (GDPR-style; suppression hash retained).
+	 *
+	 * @return void
+	 */
+	private function handle_erase(): void {
+		if ( ! isset( $_GET['action'] ) || 'erase' !== $_GET['action'] || ! isset( $_GET['id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+		$id = absint( wp_unslash( $_GET['id'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$this->require_capability( Capabilities::MANAGE_CONTACTS );
+		check_admin_referer( self::NONCE_ERASE . $id );
+
+		$contact = $this->plugin->get( 'contacts' )->find( $id );
+		if ( ! $contact ) {
+			$this->notices->add( __( 'Contact not found.', 'ibg-client-outreach' ), 'error' );
+			wp_safe_redirect( $this->get_url() );
+			exit;
+		}
+
+		$result = $this->plugin->get( 'erasure' )->erase( $contact->email );
+
+		$this->notices->add(
+			sprintf(
+				/* translators: 1: events, 2: logs, 3: queue rows */
+				__( 'Personal data erased: contact deleted, %1$d activity records deleted, %2$d log entries and %3$d queue rows anonymised.', 'ibg-client-outreach' ),
+				(int) $result['events_deleted'],
+				(int) $result['logs_anonymized'],
+				(int) $result['queue_anonymized']
+			) . ( $result['suppression_retained'] ? ' ' . __( 'The address stays on the suppression list as a hash so it is never emailed again.', 'ibg-client-outreach' ) : '' ),
+			'success'
+		);
+
+		wp_safe_redirect( $this->get_url() );
 		exit;
 	}
 

@@ -286,6 +286,10 @@ final class Templates_Page extends Abstract_Page {
 
 		nocache_headers();
 		header( 'X-Frame-Options: SAMEORIGIN' );
+		// Belt and braces over wp_kses: no scripts, no external fetches except images, no form posts.
+		header( "Content-Security-Policy: default-src 'none'; img-src * data:; style-src 'unsafe-inline'; font-src *; form-action 'none'; base-uri 'none'" );
+		header( 'X-Content-Type-Options: nosniff' );
+		header( 'Referrer-Policy: no-referrer' );
 
 		if ( 'text' === $format ) {
 			header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset' ) );
