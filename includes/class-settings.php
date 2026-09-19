@@ -36,6 +36,13 @@ final class Settings {
 	private array $dynamic_options = array();
 
 	/**
+	 * Callbacks that append fields to a section at render/sanitise time.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $dynamic_fields = array();
+
+	/**
 	 * Register a callback that provides the options for a select field.
 	 *
 	 * @param string   $key      Setting key.
@@ -44,6 +51,27 @@ final class Settings {
 	 */
 	public function set_dynamic_options( string $key, callable $callback ): void {
 		$this->dynamic_options[ $key ] = $callback;
+	}
+
+	/**
+	 * Register a callback that appends fields to a section (e.g. provider settings).
+	 *
+	 * @param string   $section  Section key.
+	 * @param callable $callback Returns array<string, array> of field definitions.
+	 * @return void
+	 */
+	public function set_dynamic_fields( string $section, callable $callback ): void {
+		$this->dynamic_fields[ $section ] = $callback;
+	}
+
+	/**
+	 * Decrypted value of a secret setting ('' when unset or undecryptable).
+	 *
+	 * @param string $key Setting key.
+	 * @return string
+	 */
+	public function get_secret( string $key ): string {
+		return Secrets::decrypt( (string) $this->get( $key, '' ) );
 	}
 
 	/**
@@ -300,6 +328,12 @@ final class Settings {
 			unset( $section );
 		}
 
+		foreach ( $this->dynamic_fields as $section_key => $callback ) {
+			if ( isset( $sections[ $section_key ] ) ) {
+				$sections[ $section_key ]['fields'] += (array) $callback();
+			}
+		}
+
 		/**
 		 * Filter the settings schema. Extensions may add fields; every added
 		 * field must declare a supported "type" so it is sanitised.
@@ -421,7 +455,15 @@ final class Settings {
 				if ( array_key_exists( $value, $options ) ) {
 					return $value;
 				}
-				return $current;
+				return $current ?? ( $field['default'] ?? array_key_first( $options ) );
+
+			case 'password':
+				// Blank means "keep the saved secret"; the form never echoes it back.
+				$value = (string) $value;
+				if ( '' === $value ) {
+					return (string) $current;
+				}
+				return Secrets::encrypt( $value );
 
 			case 'textarea':
 				return sanitize_textarea_field( (string) $value );

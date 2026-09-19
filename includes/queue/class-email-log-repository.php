@@ -184,6 +184,23 @@ final class Email_Log_Repository {
 	}
 
 	/**
+	 * Most recent log row for a provider message id (webhook correlation).
+	 *
+	 * @param string $message_id Provider message id.
+	 * @return object|null
+	 */
+	public function find_by_message_id( string $message_id ): ?object {
+		if ( '' === $message_id ) {
+			return null;
+		}
+		$wpdb = $this->db->wpdb();
+		$row  = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM {$this->db->table( 'email_logs' )} WHERE provider_message_id = %s ORDER BY id DESC LIMIT 1", $message_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		);
+		return $row ? $row : null;
+	}
+
+	/**
 	 * Counts per status, optionally per campaign.
 	 *
 	 * @param int $campaign_id Campaign id or 0.

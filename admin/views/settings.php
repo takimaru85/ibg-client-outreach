@@ -50,8 +50,28 @@ $ibg_section = $data['sections'][ $ibg_tab ];
 
 		<table class="form-table" role="presentation">
 			<tbody>
+			<?php $ibg_last_provider = null; ?>
 			<?php foreach ( $ibg_section['fields'] as $ibg_key => $ibg_field ) : ?>
-				<tr>
+				<?php
+				$ibg_provider = (string) ( $ibg_field['provider'] ?? '' );
+				if ( '' !== $ibg_provider && $ibg_provider !== $ibg_last_provider ) :
+					$ibg_last_provider = $ibg_provider;
+					?>
+					<tr class="ibg-provider-field ibg-provider-heading" data-provider="<?php echo esc_attr( $ibg_provider ); ?>">
+						<th scope="row" colspan="2">
+							<h3>
+								<?php
+								printf(
+									/* translators: %s: provider name */
+									esc_html__( '%s settings', 'ibg-client-outreach' ),
+									esc_html( (string) ( $ibg_field['provider_label'] ?? $ibg_provider ) )
+								);
+								?>
+							</h3>
+						</th>
+					</tr>
+				<?php endif; ?>
+				<tr <?php echo '' !== $ibg_provider ? 'class="ibg-provider-field" data-provider="' . esc_attr( $ibg_provider ) . '"' : ''; ?>>
 					<th scope="row">
 						<label for="<?php echo esc_attr( 'ibg-setting-' . $ibg_key ); ?>">
 							<?php echo esc_html( (string) $ibg_field['label'] ); ?>
@@ -61,7 +81,7 @@ $ibg_section = $data['sections'][ $ibg_tab ];
 						</label>
 					</th>
 					<td>
-						<?php $ibg_page->render_field( $ibg_key, $ibg_field, $data['values'][ $ibg_key ] ?? null ); ?>
+						<?php $ibg_page->render_field( $ibg_key, $ibg_field, $data['values'][ $ibg_key ] ?? ( $ibg_field['default'] ?? null ) ); ?>
 					</td>
 				</tr>
 			<?php endforeach; ?>
@@ -103,4 +123,26 @@ $ibg_section = $data['sections'][ $ibg_tab ];
 
 		<?php submit_button(); ?>
 	</form>
+
+	<?php if ( 'email' === $ibg_tab ) : ?>
+		<div class="ibg-card ibg-card-narrow">
+			<h2><?php esc_html_e( 'Send a delivery test', 'ibg-client-outreach' ); ?></h2>
+			<p class="description"><?php esc_html_e( 'Uses the saved settings above (save first). Sends a short message with your footer through the active provider and records the result in Email Logs.', 'ibg-client-outreach' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( $data['test_nonce'] ); ?>
+				<input type="hidden" name="action" value="<?php echo esc_attr( $data['test_action'] ); ?>">
+				<label for="ibg-settings-test-email" class="screen-reader-text"><?php esc_html_e( 'Send to', 'ibg-client-outreach' ); ?></label>
+				<input type="email" id="ibg-settings-test-email" name="test_email" class="regular-text" value="<?php echo esc_attr( $data['test_email'] ); ?>" required>
+				<?php submit_button( __( 'Send test email', 'ibg-client-outreach' ), 'secondary', 'submit', false ); ?>
+			</form>
+		</div>
+
+		<div class="ibg-card ibg-card-narrow">
+			<h2><?php esc_html_e( 'Delivery webhooks', 'ibg-client-outreach' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Providers that report bounces, complaints and (if enabled) opens/clicks post to this URL. Only providers that implement webhook verification accept events; the built-in wp_mail and SMTP providers do not report delivery events.', 'ibg-client-outreach' ); ?>
+			</p>
+			<code><?php echo esc_html( $data['webhook_url'] ); ?></code>
+		</div>
+	<?php endif; ?>
 </div>

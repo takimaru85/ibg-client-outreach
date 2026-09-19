@@ -16,9 +16,11 @@ use IBG\Outreach\Campaigns\Campaign_Repository;
 use IBG\Outreach\Campaigns\Campaign_Service;
 use IBG\Outreach\Contacts\Contact_Repository;
 use IBG\Outreach\Contacts\Contact_Service;
+use IBG\Outreach\Email\Delivery_Event_Processor;
 use IBG\Outreach\Email\Email_Composer;
 use IBG\Outreach\Email\Merge_Tags;
 use IBG\Outreach\Email\Provider_Registry;
+use IBG\Outreach\Email\Webhook_Endpoint;
 use IBG\Outreach\Events\Event_Repository;
 use IBG\Outreach\Import\Contact_Importer;
 use IBG\Outreach\Lists\List_Repository;
@@ -145,6 +147,7 @@ final class Plugin {
 		// Queue lifecycle hooks and cron run on every request type (cron may fire on the front end).
 		$this->get( 'queue_filler' )->register();
 		$this->get( 'cron' )->register();
+		$this->get( 'webhooks' )->register();
 
 		if ( ! is_admin() ) {
 			$this->get( 'unsubscribe_endpoint' )->register();
@@ -210,6 +213,7 @@ final class Plugin {
 				$settings = new Settings();
 				// The provider dropdown is populated lazily from the registry to avoid a construction cycle.
 				$settings->set_dynamic_options( 'provider', static fn(): array => $p->get( 'providers' )->get_options() );
+				$settings->set_dynamic_fields( 'email', static fn(): array => $p->get( 'providers' )->get_all_settings_fields() );
 				return $settings;
 			}
 		);
@@ -323,6 +327,21 @@ final class Plugin {
 		);
 
 		$this->register( 'cron', static fn( Plugin $p ): Cron => new Cron( $p ) );
+
+		$this->register(
+			'delivery_events',
+			static fn( Plugin $p ): Delivery_Event_Processor => new Delivery_Event_Processor(
+				$p->get( 'contacts' ),
+				$p->get( 'contact_service' ),
+				$p->get( 'suppressions' ),
+				$p->get( 'logs' ),
+				$p->get( 'events' ),
+				$p->get( 'settings' ),
+				$p->get( 'database' )
+			)
+		);
+
+		$this->register( 'webhooks', static fn( Plugin $p ): Webhook_Endpoint => new Webhook_Endpoint( $p->get( 'providers' ), $p->get( 'delivery_events' ) ) );
 
 		$this->register(
 			'importer',

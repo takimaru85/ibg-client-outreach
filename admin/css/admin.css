@@ -628,3 +628,12 @@
 	margin: 0;
 	line-height: 1.8;
 }
+
+/* Settings: provider sections */
+
+.ibg-outreach-wrap .ibg-provider-heading h3 {
+	margin: 12px 0 0;
+	padding-top: 12px;
+	border-top: 1px solid #f0f0f1;
+	font-size: 14px;
+}

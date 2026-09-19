@@ -21,6 +21,19 @@
 		}
 	}, true );
 
+	// Settings: show only the selected provider's fields.
+	var providerSelect = document.getElementById( 'ibg-setting-provider' );
+	if ( providerSelect ) {
+		var toggleProviderRows = function () {
+			var rows = document.querySelectorAll( '.ibg-provider-field' );
+			Array.prototype.forEach.call( rows, function ( row ) {
+				row.hidden = row.getAttribute( 'data-provider' ) !== providerSelect.value;
+			} );
+		};
+		providerSelect.addEventListener( 'change', toggleProviderRows );
+		toggleProviderRows();
+	}
+
 	// Lists: show the criteria panel only for segments.
 	var typeField = document.getElementById( 'ibg-list-type' );
 	var criteria  = document.getElementById( 'ibg-segment-criteria' );

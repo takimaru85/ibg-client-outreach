@@ -21,6 +21,9 @@ final class Settings_Page extends Abstract_Page {
 	public const SLUG         = 'ibg-outreach-settings';
 	public const OPTION_GROUP = 'ibg_outreach_settings_group';
 
+	private const TEST_ACTION = 'ibg_outreach_settings_test_email';
+	private const NONCE_TEST  = 'ibg_settings_test_email';
+
 	/** @inheritDoc */
 	public function get_slug(): string {
 		return self::SLUG;
@@ -49,6 +52,7 @@ final class Settings_Page extends Abstract_Page {
 	/** @inheritDoc */
 	public function register_hooks(): void {
 		add_action( 'admin_init', array( $this, 'register_setting' ) );
+		add_action( 'admin_post_' . self::TEST_ACTION, array( $this, 'handle_test_email' ) );
 		// options.php requires manage_options by default; map it to our capability.
 		add_filter( 'option_page_capability_' . self::OPTION_GROUP, static fn(): string => Capabilities::MANAGE_SETTINGS );
 	}
@@ -94,8 +98,58 @@ final class Settings_Page extends Abstract_Page {
 				'values'      => $settings->all(),
 				'providers'   => $providers->all(),
 				'active_id'   => $providers->get_active()->get_id(),
+				'test_nonce'  => self::NONCE_TEST,
+				'test_action' => self::TEST_ACTION,
+				'test_email'  => wp_get_current_user()->user_email,
+				'webhook_url' => \IBG\Outreach\Email\Webhook_Endpoint::get_url( '{provider}' ),
 			)
 		);
+	}
+
+	/**
+	 * admin-post: send a plain test email through the active provider using saved settings.
+	 *
+	 * @return void
+	 */
+	public function handle_test_email(): void {
+		check_admin_referer( self::NONCE_TEST );
+		$this->require_capability( Capabilities::MANAGE_SETTINGS );
+
+		$to       = isset( $_POST['test_email'] ) ? sanitize_email( wp_unslash( $_POST['test_email'] ) ) : '';
+		$redirect = $this->get_url( array( 'tab' => 'email' ) );
+
+		if ( ! is_email( $to ) ) {
+			$this->notices->add( __( 'Enter a valid email address for the test.', 'ibg-client-outreach' ), 'error' );
+			wp_safe_redirect( $redirect );
+			exit;
+		}
+
+		$provider = $this->plugin->get( 'providers' )->get_active();
+		$message  = $this->plugin->get( 'composer' )->compose(
+			array(
+				'to_email'  => $to,
+				'subject'   => __( 'IBG Client Outreach delivery test', 'ibg-client-outreach' ),
+				'body_html' => '<p>' . esc_html__( 'This message confirms that your sending provider is configured correctly.', 'ibg-client-outreach' ) . '</p>'
+					. '<p>' . esc_html( sprintf( /* translators: 1: provider name, 2: site URL */ __( 'Provider: %1$s · Site: %2$s', 'ibg-client-outreach' ), $provider->get_name(), home_url( '/' ) ) ) . '</p>',
+				'context'   => \IBG\Outreach\Email\Merge_Context::sample(),
+				'is_test'   => true,
+			)
+		);
+
+		$result = $provider->send( $message );
+		$this->plugin->get( 'logs' )->log_test( $message, $result, $provider->get_id() );
+
+		$this->notices->add(
+			$result->is_success()
+				/* translators: 1: email, 2: provider, 3: message id */
+				? sprintf( __( 'Test email sent to %1$s via %2$s (message id: %3$s).', 'ibg-client-outreach' ), $to, $provider->get_name(), '' !== $result->get_message_id() ? $result->get_message_id() : '—' )
+				/* translators: %s: error */
+				: sprintf( __( 'Test email failed: %s', 'ibg-client-outreach' ), $result->get_error() ),
+			$result->is_success() ? 'success' : 'error'
+		);
+
+		wp_safe_redirect( $redirect );
+		exit;
 	}
 
 	/**
@@ -144,6 +198,19 @@ final class Settings_Page extends Abstract_Page {
 					);
 				}
 				echo '</select>';
+				break;
+
+			case 'password':
+				$has_value = '' !== (string) $value;
+				printf(
+					'<input type="password" class="regular-text" id="%1$s" name="%2$s" value="" autocomplete="new-password" placeholder="%3$s">',
+					esc_attr( $id ),
+					esc_attr( $name ),
+					$has_value ? '••••••••••' : ''
+				);
+				if ( $has_value ) {
+					printf( ' <span class="ibg-badge ibg-badge-ok">%s</span>', esc_html__( 'Saved', 'ibg-client-outreach' ) );
+				}
 				break;
 
 			case 'textarea':
