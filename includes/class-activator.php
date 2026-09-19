@@ -65,6 +65,8 @@ final class Activator {
 			add_option( self::OPTION_SECRET, bin2hex( random_bytes( 32 ) ), '', 'no' );
 		}
 
+		\IBG\Outreach\Queue\Cron::schedule_events();
+
 		set_transient( self::TRANSIENT_WELCOME, 1, MINUTE_IN_SECONDS );
 	}
 }

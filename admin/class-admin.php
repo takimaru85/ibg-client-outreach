@@ -13,6 +13,8 @@ use IBG\Outreach\Admin\Pages\Contacts_Page;
 use IBG\Outreach\Admin\Pages\Dashboard_Page;
 use IBG\Outreach\Admin\Pages\Import_Page;
 use IBG\Outreach\Admin\Pages\Lists_Page;
+use IBG\Outreach\Admin\Pages\Logs_Page;
+use IBG\Outreach\Admin\Pages\Queue_Page;
 use IBG\Outreach\Admin\Pages\Settings_Page;
 use IBG\Outreach\Admin\Pages\Templates_Page;
 use IBG\Outreach\Capabilities;
@@ -69,6 +71,8 @@ final class Admin {
 		$this->menu->add_page( new Lists_Page( $this->plugin, $this->notices ) );
 		$this->menu->add_page( new Campaigns_Page( $this->plugin, $this->notices ) );
 		$this->menu->add_page( new Templates_Page( $this->plugin, $this->notices ) );
+		$this->menu->add_page( new Queue_Page( $this->plugin, $this->notices ) );
+		$this->menu->add_page( new Logs_Page( $this->plugin, $this->notices ) );
 		$this->menu->add_page( new Settings_Page( $this->plugin, $this->notices ) );
 
 		/**

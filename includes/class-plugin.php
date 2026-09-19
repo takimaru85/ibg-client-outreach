@@ -23,6 +23,11 @@ use IBG\Outreach\Events\Event_Repository;
 use IBG\Outreach\Import\Contact_Importer;
 use IBG\Outreach\Lists\List_Repository;
 use IBG\Outreach\Lists\List_Service;
+use IBG\Outreach\Queue\Cron;
+use IBG\Outreach\Queue\Email_Log_Repository;
+use IBG\Outreach\Queue\Queue_Filler;
+use IBG\Outreach\Queue\Queue_Repository;
+use IBG\Outreach\Queue\Queue_Worker;
 use IBG\Outreach\Templates\Template_Repository;
 use IBG\Outreach\Templates\Template_Service;
 use IBG\Outreach\Unsubscribe\Suppression_Repository;
@@ -135,6 +140,10 @@ final class Plugin {
 
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 		add_action( 'wp_initialize_site', array( $this, 'on_new_site' ), 10, 1 );
+
+		// Queue lifecycle hooks and cron run on every request type (cron may fire on the front end).
+		$this->get( 'queue_filler' )->register();
+		$this->get( 'cron' )->register();
 
 		if ( is_admin() ) {
 			// Keep the schema current after plugin updates (activation hooks don't run on update).
@@ -263,6 +272,41 @@ final class Plugin {
 				$p->get( 'database' )
 			)
 		);
+
+		$this->register( 'queue', static fn( Plugin $p ): Queue_Repository => new Queue_Repository( $p->get( 'database' ) ) );
+
+		$this->register( 'logs', static fn( Plugin $p ): Email_Log_Repository => new Email_Log_Repository( $p->get( 'database' ) ) );
+
+		$this->register(
+			'queue_filler',
+			static fn( Plugin $p ): Queue_Filler => new Queue_Filler(
+				$p->get( 'queue' ),
+				$p->get( 'audience' ),
+				$p->get( 'contacts' ),
+				$p->get( 'campaigns' ),
+				$p->get( 'campaign_service' ),
+				$p->get( 'events' ),
+				$p->get( 'database' )
+			)
+		);
+
+		$this->register(
+			'queue_worker',
+			static fn( Plugin $p ): Queue_Worker => new Queue_Worker(
+				$p->get( 'queue' ),
+				$p->get( 'campaigns' ),
+				$p->get( 'campaign_service' ),
+				$p->get( 'contacts' ),
+				$p->get( 'suppressions' ),
+				$p->get( 'composer' ),
+				$p->get( 'providers' ),
+				$p->get( 'logs' ),
+				$p->get( 'settings' ),
+				$p->get( 'database' )
+			)
+		);
+
+		$this->register( 'cron', static fn( Plugin $p ): Cron => new Cron( $p ) );
 
 		$this->register(
 			'importer',

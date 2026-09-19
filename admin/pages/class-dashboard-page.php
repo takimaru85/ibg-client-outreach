@@ -185,14 +185,20 @@ final class Dashboard_Page extends Abstract_Page {
 			'help'  => '',
 		);
 
-		$cron_disabled = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
-		$rows[]        = array(
-			'label' => __( 'WP-Cron', 'ibg-client-outreach' ),
-			'value' => $cron_disabled
-				? __( 'Disabled (DISABLE_WP_CRON) — a system cron must call wp-cron.php', 'ibg-client-outreach' )
-				: __( 'Enabled (triggered by site traffic)', 'ibg-client-outreach' ),
-			'state' => 'info',
-			'help'  => __( 'For reliable sending, disable WP-Cron and run wp-cron.php from a real system cron every minute.', 'ibg-client-outreach' ),
+		$cron   = \IBG\Outreach\Queue\Cron::get_status();
+		$format = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		$rows[] = array(
+			'label' => __( 'Email queue (WP-Cron)', 'ibg-client-outreach' ),
+			'value' => sprintf(
+				/* translators: 1: next run, 2: last run */
+				__( 'Next run %1$s · last run %2$s', 'ibg-client-outreach' ),
+				$cron['next_run'] ? wp_date( $format, (int) $cron['next_run'] ) : __( 'not scheduled', 'ibg-client-outreach' ),
+				$cron['last_run'] ? wp_date( $format, (int) $cron['last_run'] ) : __( 'never', 'ibg-client-outreach' )
+			),
+			'state' => $cron['next_run'] ? ( $cron['disabled'] ? 'ok' : 'info' ) : 'error',
+			'help'  => $cron['disabled']
+				? __( 'DISABLE_WP_CRON is set: make sure a system cron runs wp-cron.php every minute.', 'ibg-client-outreach' )
+				: __( 'WP-Cron is triggered by site traffic, so sending pauses when nobody visits. For reliable delivery set DISABLE_WP_CRON and run wp-cron.php from a real cron every minute.', 'ibg-client-outreach' ),
 		);
 
 		$rows[] = array(
