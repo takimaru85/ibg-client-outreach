@@ -414,6 +414,7 @@ final class Campaigns_Page extends Abstract_Page {
 
 		$provider = $this->plugin->get( 'providers' )->get_active();
 		$result   = $provider->send( $message );
+		$this->plugin->get( 'logs' )->log_test( $message, $result, $provider->get_id() );
 
 		$this->notices->add(
 			$result->is_success()

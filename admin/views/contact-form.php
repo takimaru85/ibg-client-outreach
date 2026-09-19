@@ -46,6 +46,7 @@ $ibg_event_labels = array(
 	'contact.suppression_preserved'    => __( 'Suppression preserved (change refused)', 'ibg-client-outreach' ),
 	'contact.resubscribed'             => __( 'Resubscribed (confirmed by admin)', 'ibg-client-outreach' ),
 	'contact.lists_changed'            => __( 'List membership changed', 'ibg-client-outreach' ),
+	'contact.unsubscribed'             => __( 'Unsubscribed via email link', 'ibg-client-outreach' ),
 );
 ?>
 <div class="wrap ibg-outreach-wrap">

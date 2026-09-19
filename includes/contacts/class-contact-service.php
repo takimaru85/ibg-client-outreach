@@ -447,10 +447,12 @@ final class Contact_Service {
 	 * @return void
 	 */
 	private function apply_marketing_policy( Contact $contact, ?Contact $existing, array $options ): void {
-		$source    = (string) ( $options['source'] ?? self::SOURCE_ADMIN );
-		$confirmed = self::SOURCE_ADMIN === $source && ! empty( $options['confirm_resubscribe'] );
-		$requested = $contact->marketing_status;
-		$email     = $contact->email;
+		$source      = (string) ( $options['source'] ?? self::SOURCE_ADMIN );
+		$requested   = $contact->marketing_status;
+		$email       = $contact->email;
+		$campaign_id = ! empty( $options['campaign_id'] ) ? (int) $options['campaign_id'] : null;
+		// The suppression list records where a block came from.
+		$supp_source = self::SOURCE_PUBLIC === $source ? Suppression_Repository::SOURCE_LINK : $source;
 
 		// What the address is currently locked to, if anything.
 		$locked      = null;
@@ -466,6 +468,14 @@ final class Contact_Service {
 		$requested_is_suppressed = in_array( $requested, Contact::suppressed_statuses(), true );
 		$contact_id              = $contact->id > 0 ? $contact->id : null;
 
+		// Who may lift a suppression: an admin who ticked the confirmation box (any block),
+		// or the recipient themselves via the public resubscribe link (plain unsubscribes only,
+		// never Do Not Contact). Imports and the API never can.
+		$confirmed = ! empty( $options['confirm_resubscribe'] ) && (
+			self::SOURCE_ADMIN === $source
+			|| ( self::SOURCE_PUBLIC === $source && Contact::MARKETING_DNC !== $locked )
+		);
+
 		if ( null !== $locked ) {
 			if ( $requested_is_suppressed ) {
 				$downgrade = Contact::MARKETING_DNC === $locked && Contact::MARKETING_DNC !== $requested;
@@ -473,7 +483,7 @@ final class Contact_Service {
 					$contact->marketing_status = $locked;
 					$this->notices[]           = __( 'Marketing status kept as Do Not Contact. Tick the confirmation box to change it.', 'ibg-client-outreach' );
 				} elseif ( $requested !== $locked ) {
-					$this->suppressions->add( $email, $this->reason_for( $requested ), $source, $contact_id );
+					$this->suppressions->add( $email, $this->reason_for( $requested ), $supp_source, $contact_id, $campaign_id );
 					$this->log_marketing_change( $contact, $existing, $source );
 				}
 			} elseif ( $confirmed ) {
@@ -505,7 +515,7 @@ final class Contact_Service {
 				);
 			}
 		} elseif ( $requested_is_suppressed ) {
-			$this->suppressions->add( $email, $this->reason_for( $requested ), $source, $contact_id );
+			$this->suppressions->add( $email, $this->reason_for( $requested ), $supp_source, $contact_id, $campaign_id );
 			if ( empty( $contact->unsubscribed_at ) ) {
 				$contact->unsubscribed_at = $this->db->now();
 			}

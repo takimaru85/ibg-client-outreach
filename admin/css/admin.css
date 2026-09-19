@@ -484,3 +484,147 @@
 	font-weight: 600;
 	margin-right: 6px;
 }
+
+/* Campaigns */
+
+.ibg-badge-campaign-draft {
+	background: #646970;
+}
+
+.ibg-badge-campaign-scheduled {
+	background: #2271b1;
+}
+
+.ibg-badge-campaign-processing {
+	background: #dba617;
+}
+
+.ibg-badge-campaign-paused {
+	background: #b45f06;
+}
+
+.ibg-badge-campaign-completed {
+	background: #00a32a;
+}
+
+.ibg-badge-campaign-cancelled {
+	background: #d63638;
+}
+
+.ibg-outreach-wrap .ibg-subject {
+	font-size: 12px;
+	color: #646970;
+}
+
+.ibg-outreach-wrap .ibg-text-error {
+	color: #d63638;
+	font-weight: 600;
+}
+
+.ibg-outreach-wrap .ibg-campaign-layout {
+	grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.ibg-outreach-wrap .ibg-preflight-numbers {
+	grid-template-columns: 130px 1fr;
+	margin-bottom: 12px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.ibg-outreach-wrap .ibg-preflight li {
+	display: grid;
+	grid-template-columns: 20px 1fr;
+	column-gap: 6px;
+	margin-bottom: 8px;
+	font-size: 12px;
+}
+
+.ibg-outreach-wrap .ibg-preflight li .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.ibg-outreach-wrap .ibg-preflight li.is-ok .dashicons {
+	color: #00a32a;
+}
+
+.ibg-outreach-wrap .ibg-preflight li.is-error .dashicons {
+	color: #d63638;
+}
+
+.ibg-outreach-wrap .ibg-preflight li.is-warning .dashicons {
+	color: #dba617;
+}
+
+.ibg-outreach-wrap .ibg-preflight-msg {
+	display: block;
+	color: #50575e;
+}
+
+.ibg-outreach-wrap .ibg-actions-card .button-hero {
+	width: 100%;
+	text-align: center;
+}
+
+.ibg-outreach-wrap .ibg-actions-card input[type="datetime-local"] {
+	margin-bottom: 6px;
+}
+
+/* Queue & logs */
+
+.ibg-badge-queue-pending,
+.ibg-stat-queue-pending .ibg-stat-value {
+	color: #2271b1;
+}
+
+.ibg-badge-queue-pending {
+	background: #2271b1;
+	color: #fff;
+}
+
+.ibg-badge-queue-sending {
+	background: #dba617;
+}
+
+.ibg-badge-queue-sent,
+.ibg-badge-log-sent {
+	background: #00a32a;
+}
+
+.ibg-badge-queue-failed,
+.ibg-badge-log-failed {
+	background: #d63638;
+}
+
+.ibg-badge-queue-skipped,
+.ibg-badge-log-skipped {
+	background: #646970;
+}
+
+.ibg-badge-log-test {
+	background: #8c8f94;
+}
+
+.ibg-outreach-wrap .ibg-queue-stats {
+	margin: 12px 0;
+	max-width: 960px;
+}
+
+.ibg-outreach-wrap .ibg-stat-queue-sent .ibg-stat-value {
+	color: #00a32a;
+}
+
+.ibg-outreach-wrap .ibg-stat-queue-failed .ibg-stat-value {
+	color: #d63638;
+}
+
+.ibg-outreach-wrap .ibg-cron-card {
+	margin-bottom: 12px;
+}
+
+.ibg-outreach-wrap .ibg-cron-card p {
+	margin: 0;
+	line-height: 1.8;
+}

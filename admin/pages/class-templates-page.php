@@ -444,12 +444,13 @@ final class Templates_Page extends Abstract_Page {
 
 		$provider = $providers->get_active();
 		$result   = $provider->send( $message );
+		$this->plugin->get( 'logs' )->log_test( $message, $result, $provider->get_id() );
 
 		if ( $result->is_success() ) {
 			$this->notices->add(
 				sprintf(
 					/* translators: 1: email address, 2: provider name */
-					__( 'Test email sent to %1$s via %2$s. The unsubscribe link in a test email points to a placeholder until the public unsubscribe page is enabled.', 'ibg-client-outreach' ),
+					__( 'Test email sent to %1$s via %2$s. The unsubscribe link in a test email opens an explanatory page and changes nothing.', 'ibg-client-outreach' ),
 					$to,
 					$provider->get_name()
 				),

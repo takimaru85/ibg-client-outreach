@@ -31,6 +31,7 @@ use IBG\Outreach\Queue\Queue_Worker;
 use IBG\Outreach\Templates\Template_Repository;
 use IBG\Outreach\Templates\Template_Service;
 use IBG\Outreach\Unsubscribe\Suppression_Repository;
+use IBG\Outreach\Unsubscribe\Unsubscribe_Endpoint;
 use IBG\Outreach\Unsubscribe\Unsubscribe_Token;
 
 defined( 'ABSPATH' ) || exit;
@@ -145,6 +146,10 @@ final class Plugin {
 		$this->get( 'queue_filler' )->register();
 		$this->get( 'cron' )->register();
 
+		if ( ! is_admin() ) {
+			$this->get( 'unsubscribe_endpoint' )->register();
+		}
+
 		if ( is_admin() ) {
 			// Keep the schema current after plugin updates (activation hooks don't run on update).
 			$this->get( 'installer' )->maybe_upgrade();
@@ -228,6 +233,17 @@ final class Plugin {
 		);
 
 		$this->register( 'unsubscribe_token', static fn(): Unsubscribe_Token => new Unsubscribe_Token() );
+
+		$this->register(
+			'unsubscribe_endpoint',
+			static fn( Plugin $p ): Unsubscribe_Endpoint => new Unsubscribe_Endpoint(
+				$p->get( 'unsubscribe_token' ),
+				$p->get( 'contacts' ),
+				$p->get( 'contact_service' ),
+				$p->get( 'events' ),
+				$p->get( 'settings' )
+			)
+		);
 
 		$this->register( 'merge_tags', static fn( Plugin $p ): Merge_Tags => new Merge_Tags( $p->get( 'settings' ), $p->get( 'unsubscribe_token' ) ) );
 

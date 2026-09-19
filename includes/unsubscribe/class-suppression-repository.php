@@ -191,6 +191,129 @@ final class Suppression_Repository {
 	}
 
 	/**
+	 * Reason labels.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function reasons(): array {
+		return array(
+			self::REASON_UNSUBSCRIBED => __( 'Unsubscribed', 'ibg-client-outreach' ),
+			self::REASON_DNC          => __( 'Do Not Contact', 'ibg-client-outreach' ),
+			self::REASON_BOUNCED      => __( 'Bounced', 'ibg-client-outreach' ),
+			self::REASON_COMPLAINT    => __( 'Complaint', 'ibg-client-outreach' ),
+		);
+	}
+
+	/**
+	 * Query for the admin table.
+	 *
+	 * @param array<string, mixed> $args search, reason, orderby, order, per_page, page.
+	 * @return array{items: object[], total: int}
+	 */
+	public function query( array $args = array() ): array {
+		$args = wp_parse_args(
+			$args,
+			array(
+				'search'   => '',
+				'reason'   => '',
+				'orderby'  => 'created_at',
+				'order'    => 'DESC',
+				'per_page' => 50,
+				'page'     => 1,
+			)
+		);
+
+		$wpdb   = $this->db->wpdb();
+		$table  = $this->db->table( 'suppressions' );
+		$where  = array( '1=1' );
+		$params = array();
+
+		if ( '' !== $args['search'] ) {
+			$where[]  = 'email LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( (string) $args['search'] ) . '%';
+		}
+		if ( '' !== $args['reason'] && array_key_exists( (string) $args['reason'], self::reasons() ) ) {
+			$where[]  = 'reason = %s';
+			$params[] = (string) $args['reason'];
+		}
+
+		$where_sql = implode( ' AND ', $where );
+		$orderby   = in_array( $args['orderby'], array( 'id', 'email', 'reason', 'source', 'created_at' ), true ) ? $args['orderby'] : 'created_at';
+		$order     = 'ASC' === strtoupper( (string) $args['order'] ) ? 'ASC' : 'DESC';
+		$per_page  = max( 1, (int) $args['per_page'] );
+		$offset    = max( 0, ( (int) $args['page'] - 1 ) * $per_page );
+
+		$count_sql = "SELECT COUNT(*) FROM {$table} WHERE {$where_sql}";
+		$total     = (int) $wpdb->get_var( empty( $params ) ? $count_sql : $wpdb->prepare( $count_sql, $params ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+		$sql   = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY {$orderby} {$order}, id {$order} LIMIT %d OFFSET %d";
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $params, array( $per_page, $offset ) ) ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+		return array(
+			'items' => (array) $items,
+			'total' => $total,
+		);
+	}
+
+	/**
+	 * Counts per reason.
+	 *
+	 * @return array<string, int>
+	 */
+	public function count_by_reason(): array {
+		$wpdb   = $this->db->wpdb();
+		$rows   = $wpdb->get_results( "SELECT reason, COUNT(*) AS total FROM {$this->db->table( 'suppressions' )} GROUP BY reason", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$counts = array_fill_keys( array_keys( self::reasons() ), 0 );
+		foreach ( (array) $rows as $row ) {
+			$counts[ (string) $row['reason'] ] = (int) $row['total'];
+		}
+		return $counts;
+	}
+
+	/**
+	 * Find by row id.
+	 *
+	 * @param int $id Row id.
+	 * @return object|null
+	 */
+	public function find_by_id( int $id ): ?object {
+		$wpdb = $this->db->wpdb();
+		$row  = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$this->db->table( 'suppressions' )} WHERE id = %d", $id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return $row ? $row : null;
+	}
+
+	/**
+	 * Delete a row by id (admin removal of an entry with no contact record).
+	 *
+	 * @param int $id Row id.
+	 * @return bool
+	 */
+	public function delete_by_id( int $id ): bool {
+		$wpdb = $this->db->wpdb();
+		return false !== $wpdb->delete( $this->db->table( 'suppressions' ), array( 'id' => $id ), array( '%d' ) );
+	}
+
+	/**
+	 * Stream all rows for export (generator; no full-table memory).
+	 *
+	 * @return \Generator<object>
+	 */
+	public function iterate(): \Generator {
+		$wpdb  = $this->db->wpdb();
+		$after = 0;
+		while ( true ) {
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$this->db->table( 'suppressions' )} WHERE id > %d ORDER BY id ASC LIMIT 1000", $after ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			if ( empty( $rows ) ) {
+				return;
+			}
+			foreach ( $rows as $row ) {
+				$after = (int) $row->id;
+				yield $row;
+			}
+		}
+	}
+
+	/**
 	 * Total number of suppressions, optionally by reason.
 	 *
 	 * @param string $reason Optional reason filter.
