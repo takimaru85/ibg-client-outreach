@@ -11,7 +11,10 @@
 
 namespace IBG\Outreach;
 
+use IBG\Outreach\Analytics\Stats_Repository;
+use IBG\Outreach\Analytics\Tracking;
 use IBG\Outreach\Campaigns\Audience_Resolver;
+use IBG\Outreach\Rest\Rest_Api;
 use IBG\Outreach\Campaigns\Campaign_Repository;
 use IBG\Outreach\Campaigns\Campaign_Service;
 use IBG\Outreach\Contacts\Contact_Repository;
@@ -151,7 +154,10 @@ final class Plugin {
 
 		if ( ! is_admin() ) {
 			$this->get( 'unsubscribe_endpoint' )->register();
+			$this->get( 'tracking' )->register();
 		}
+
+		$this->get( 'rest_api' )->register();
 
 		if ( is_admin() ) {
 			// Keep the schema current after plugin updates (activation hooks don't run on update).
@@ -251,7 +257,31 @@ final class Plugin {
 
 		$this->register( 'merge_tags', static fn( Plugin $p ): Merge_Tags => new Merge_Tags( $p->get( 'settings' ), $p->get( 'unsubscribe_token' ) ) );
 
-		$this->register( 'composer', static fn( Plugin $p ): Email_Composer => new Email_Composer( $p->get( 'merge_tags' ), $p->get( 'settings' ) ) );
+		$this->register( 'signer', static fn(): Signer => new Signer() );
+
+		$this->register(
+			'tracking',
+			static fn( Plugin $p ): Tracking => new Tracking(
+				$p->get( 'signer' ),
+				$p->get( 'settings' ),
+				$p->get( 'events' ),
+				$p->get( 'contacts' ),
+				$p->get( 'queue' ),
+				$p->get( 'database' )
+			)
+		);
+
+		$this->register( 'composer', static fn( Plugin $p ): Email_Composer => new Email_Composer( $p->get( 'merge_tags' ), $p->get( 'settings' ), $p->get( 'tracking' ) ) );
+
+		$this->register(
+			'stats',
+			static fn( Plugin $p ): Stats_Repository => new Stats_Repository(
+				$p->get( 'database' ),
+				$p->get( 'contacts' ),
+				$p->get( 'campaigns' ),
+				$p->get( 'suppressions' )
+			)
+		);
 
 		$this->register( 'templates', static fn( Plugin $p ): Template_Repository => new Template_Repository( $p->get( 'database' ) ) );
 
@@ -342,6 +372,8 @@ final class Plugin {
 		);
 
 		$this->register( 'webhooks', static fn( Plugin $p ): Webhook_Endpoint => new Webhook_Endpoint( $p->get( 'providers' ), $p->get( 'delivery_events' ) ) );
+
+		$this->register( 'rest_api', static fn( Plugin $p ): Rest_Api => new Rest_Api( $p ) );
 
 		$this->register(
 			'importer',

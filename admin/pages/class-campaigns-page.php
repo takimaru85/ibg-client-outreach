@@ -209,6 +209,11 @@ final class Campaigns_Page extends Abstract_Page {
 				'segments'        => array_filter( $lists, static fn( Contact_List $l ): bool => $l->is_segment() ),
 				'summary'         => $summary,
 				'preflight'       => $preflight,
+				'engagement'      => $campaign && $campaign->has_started() ? $this->plugin->get( 'stats' )->campaign_engagement( $campaign->id ) : array(),
+				'tracking'        => array(
+					'opens'  => (bool) $settings->get( 'track_opens', false ),
+					'clicks' => (bool) $settings->get( 'track_clicks', false ),
+				),
 				'can_manage'      => current_user_can( Capabilities::MANAGE_CAMPAIGNS ),
 				'can_send'        => current_user_can( Capabilities::SEND_CAMPAIGNS ),
 				'test_email'      => wp_get_current_user()->user_email,

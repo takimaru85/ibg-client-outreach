@@ -201,6 +201,27 @@ $ibg_disabled = $ibg_editable ? '' : 'disabled';
 						?>
 					</p>
 				</div>
+
+				<?php $ibg_eng = $data['engagement']; ?>
+				<div class="ibg-card">
+					<h2><?php esc_html_e( 'Engagement', 'ibg-client-outreach' ); ?></h2>
+					<div class="ibg-stat-grid">
+						<?php if ( $data['tracking']['opens'] || $ibg_eng['opened_unique'] > 0 ) : ?>
+							<div class="ibg-stat"><span class="ibg-stat-value"><?php echo esc_html( number_format_i18n( $ibg_eng['opened_unique'] ) ); ?></span><span class="ibg-stat-label"><?php esc_html_e( 'Unique opens', 'ibg-client-outreach' ); ?></span></div>
+						<?php endif; ?>
+						<?php if ( $data['tracking']['clicks'] || $ibg_eng['clicked_unique'] > 0 ) : ?>
+							<div class="ibg-stat"><span class="ibg-stat-value"><?php echo esc_html( number_format_i18n( $ibg_eng['clicked_unique'] ) ); ?></span><span class="ibg-stat-label"><?php esc_html_e( 'Unique clicks', 'ibg-client-outreach' ); ?></span></div>
+						<?php endif; ?>
+						<div class="ibg-stat <?php echo $ibg_eng['unsubscribed'] ? 'ibg-stat-warning' : ''; ?>"><span class="ibg-stat-value"><?php echo esc_html( number_format_i18n( $ibg_eng['unsubscribed'] ) ); ?></span><span class="ibg-stat-label"><?php esc_html_e( 'Unsubscribed', 'ibg-client-outreach' ); ?></span></div>
+						<div class="ibg-stat <?php echo $ibg_eng['bounced'] ? 'ibg-stat-error' : ''; ?>"><span class="ibg-stat-value"><?php echo esc_html( number_format_i18n( $ibg_eng['bounced'] ) ); ?></span><span class="ibg-stat-label"><?php esc_html_e( 'Bounced', 'ibg-client-outreach' ); ?></span></div>
+						<div class="ibg-stat <?php echo $ibg_eng['complained'] ? 'ibg-stat-error' : ''; ?>"><span class="ibg-stat-value"><?php echo esc_html( number_format_i18n( $ibg_eng['complained'] ) ); ?></span><span class="ibg-stat-label"><?php esc_html_e( 'Complaints', 'ibg-client-outreach' ); ?></span></div>
+					</div>
+					<?php if ( ! $data['tracking']['opens'] && ! $data['tracking']['clicks'] ) : ?>
+						<p class="description"><?php esc_html_e( 'Open and click tracking are off (Settings → Privacy & Data). Unsubscribes, bounces and complaints are recorded regardless.', 'ibg-client-outreach' ); ?></p>
+					<?php else : ?>
+						<p class="description"><?php esc_html_e( 'Opens are undercounted: many mail clients block or proxy images. Counts are unique contacts.', 'ibg-client-outreach' ); ?></p>
+					<?php endif; ?>
+				</div>
 			<?php endif; ?>
 		</div>
 

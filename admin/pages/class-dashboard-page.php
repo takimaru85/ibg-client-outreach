@@ -97,9 +97,25 @@ final class Dashboard_Page extends Abstract_Page {
 	public function render(): void {
 		$this->require_capability();
 
+		/** @var \IBG\Outreach\Analytics\Stats_Repository $stats */
+		$stats = $this->plugin->get( 'stats' );
+
 		$this->render_view(
 			'dashboard',
 			array(
+				'contacts'             => $stats->contacts(),
+				'campaigns'            => $stats->campaigns(),
+				'emails'               => $stats->emails(),
+				'daily'                => $stats->daily_sends( 14 ),
+				'activity'             => $stats->recent_activity( 12 ),
+				'queue'                => $this->plugin->get( 'queue' )->count_by_status(),
+				'urls'                 => array(
+					'contacts'  => add_query_arg( 'page', Contacts_Page::SLUG, admin_url( 'admin.php' ) ),
+					'campaigns' => add_query_arg( 'page', Campaigns_Page::SLUG, admin_url( 'admin.php' ) ),
+					'queue'     => add_query_arg( 'page', Queue_Page::SLUG, admin_url( 'admin.php' ) ),
+					'logs'      => add_query_arg( 'page', Logs_Page::SLUG, admin_url( 'admin.php' ) ),
+					'import'    => add_query_arg( 'page', Import_Page::SLUG, admin_url( 'admin.php' ) ),
+				),
 				'status'               => $this->get_status_rows(),
 				'has_missing_tables'   => ! empty( $this->plugin->get( 'database' )->get_missing_tables() ),
 				'repair_url'           => wp_nonce_url( $this->get_url( array( 'action' => self::ACTION_REPAIR ) ), self::ACTION_REPAIR ),

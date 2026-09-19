@@ -29,7 +29,8 @@ final class Email_Composer {
 	 */
 	public function __construct(
 		private readonly Merge_Tags $tags,
-		private readonly Settings $settings
+		private readonly Settings $settings,
+		private readonly ?\IBG\Outreach\Analytics\Tracking $tracking = null
 	) {}
 
 	/**
@@ -69,6 +70,11 @@ final class Email_Composer {
 
 		$html = $this->wrap_html( $body_html, $footer_html, $subject );
 		$text = trim( $body_text . ( '' !== $footer_text ? "\n\n--\n" . $footer_text : '' ) );
+
+		// Opt-in open pixel / click redirects: real campaign sends only (never tests or previews).
+		if ( $this->tracking && ! $is_test ) {
+			$html = $this->tracking->instrument_html( $html, $ctx );
+		}
 
 		$from_email = (string) ( $args['from_email'] ?? '' );
 		$from_name  = (string) ( $args['from_name'] ?? '' );
