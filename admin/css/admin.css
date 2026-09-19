@@ -1,0 +1,486 @@
+/* IBG Client Outreach – admin styles */
+
+.ibg-outreach-wrap .ibg-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+	gap: 20px;
+	margin-top: 20px;
+}
+
+.ibg-outreach-wrap .ibg-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	padding: 16px 20px 20px;
+}
+
+.ibg-outreach-wrap .ibg-card h2 {
+	margin: 0 0 12px;
+	font-size: 15px;
+}
+
+.ibg-outreach-wrap .ibg-status-table th {
+	width: 180px;
+	font-weight: 600;
+}
+
+.ibg-outreach-wrap .ibg-status-table td .description {
+	margin: 4px 0 0;
+}
+
+.ibg-outreach-wrap .ibg-status-value {
+	margin-left: 6px;
+}
+
+.ibg-badge {
+	display: inline-block;
+	padding: 1px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 18px;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: #fff;
+	background: #646970;
+	vertical-align: middle;
+}
+
+.ibg-badge-ok {
+	background: #00a32a;
+}
+
+.ibg-badge-warning {
+	background: #dba617;
+}
+
+.ibg-badge-error {
+	background: #d63638;
+}
+
+.ibg-badge-info {
+	background: #2271b1;
+}
+
+.ibg-outreach-wrap .ibg-steps li {
+	margin-bottom: 8px;
+}
+
+.ibg-outreach-wrap .ibg-notice-compliance {
+	margin: 16px 0 0;
+}
+
+.ibg-outreach-wrap .ibg-section-description {
+	margin: 12px 0 0;
+	font-size: 13px;
+}
+
+.ibg-outreach-wrap .ibg-required {
+	color: #d63638;
+}
+
+.ibg-outreach-wrap .ibg-providers-table {
+	max-width: 960px;
+	margin-top: 8px;
+}
+
+/* Status badges */
+
+.ibg-badge-status-lead {
+	background: #2271b1;
+}
+
+.ibg-badge-status-contact {
+	background: #646970;
+}
+
+.ibg-badge-status-customer {
+	background: #00a32a;
+}
+
+.ibg-badge-status-inactive {
+	background: #a7aaad;
+}
+
+.ibg-badge-marketing-subscribed {
+	background: #00a32a;
+}
+
+.ibg-badge-marketing-pending {
+	background: #dba617;
+}
+
+.ibg-badge-marketing-unsubscribed {
+	background: #d63638;
+}
+
+.ibg-badge-marketing-do_not_contact {
+	background: #1d2327;
+}
+
+/* Contacts list */
+
+.ibg-outreach-wrap .ibg-filters select,
+.ibg-outreach-wrap .ibg-filters input[type="date"] {
+	margin-right: 4px;
+	max-width: 12rem;
+}
+
+.ibg-outreach-wrap .ibg-website-link .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	vertical-align: middle;
+	color: #646970;
+}
+
+/* Contact form */
+
+.ibg-outreach-wrap .ibg-form-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 320px;
+	gap: 20px;
+	margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+	.ibg-outreach-wrap .ibg-form-layout {
+		grid-template-columns: 1fr;
+	}
+}
+
+.ibg-outreach-wrap .ibg-form-main .ibg-card,
+.ibg-outreach-wrap .ibg-form-side .ibg-card {
+	margin-bottom: 20px;
+}
+
+.ibg-outreach-wrap .ibg-form-main .form-table th {
+	width: 160px;
+}
+
+.ibg-outreach-wrap .ibg-inline-warning {
+	margin-top: 10px;
+	padding: 10px 12px;
+	border-left: 4px solid #d63638;
+	background: #fcf0f1;
+}
+
+.ibg-outreach-wrap .ibg-inline-warning p {
+	margin: 0 0 8px;
+}
+
+.ibg-outreach-wrap .ibg-meta {
+	margin: 0;
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	row-gap: 6px;
+	font-size: 13px;
+}
+
+.ibg-outreach-wrap .ibg-meta dt {
+	color: #646970;
+}
+
+.ibg-outreach-wrap .ibg-meta dd {
+	margin: 0;
+}
+
+.ibg-outreach-wrap .ibg-activity {
+	margin: 0;
+	max-height: 420px;
+	overflow-y: auto;
+}
+
+.ibg-outreach-wrap .ibg-activity li {
+	padding: 6px 0;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 12px;
+}
+
+.ibg-outreach-wrap .ibg-activity-time {
+	display: block;
+	color: #646970;
+}
+
+.ibg-outreach-wrap .ibg-activity-detail {
+	display: block;
+	color: #50575e;
+}
+
+.ibg-outreach-wrap .ibg-error-list {
+	margin: 0.5em 0 0.5em 1.5em;
+	list-style: disc;
+}
+
+.ibg-outreach-wrap .button-link-delete {
+	margin-left: 12px;
+}
+
+/* Import wizard */
+
+.ibg-outreach-wrap .ibg-steps-indicator {
+	margin: 8px 0 16px;
+	font-size: 13px;
+}
+
+.ibg-outreach-wrap .ibg-step {
+	display: inline-block;
+	padding: 4px 12px;
+	margin-right: 4px;
+	border-radius: 3px;
+	background: #f0f0f1;
+	color: #646970;
+}
+
+.ibg-outreach-wrap .ibg-step-active {
+	background: #2271b1;
+	color: #fff;
+}
+
+.ibg-outreach-wrap .ibg-step-done {
+	background: #00a32a;
+	color: #fff;
+}
+
+.ibg-outreach-wrap .ibg-import-form .ibg-card {
+	margin-bottom: 20px;
+	max-width: 960px;
+}
+
+.ibg-outreach-wrap .ibg-dropzone {
+	position: relative;
+	border: 2px dashed #c3c4c7;
+	border-radius: 4px;
+	padding: 32px 16px;
+	text-align: center;
+	background: #f6f7f7;
+	transition: border-color 0.15s, background 0.15s;
+}
+
+.ibg-outreach-wrap .ibg-dropzone.is-dragover {
+	border-color: #2271b1;
+	background: #f0f6fc;
+}
+
+.ibg-outreach-wrap .ibg-dropzone-text {
+	margin: 0;
+	font-size: 14px;
+}
+
+.ibg-outreach-wrap .ibg-dropzone-text .dashicons {
+	display: block;
+	margin: 0 auto 8px;
+	font-size: 32px;
+	width: 32px;
+	height: 32px;
+	color: #8c8f94;
+}
+
+.ibg-outreach-wrap .ibg-dropzone-browse {
+	color: #2271b1;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.ibg-outreach-wrap .ibg-dropzone input[type="file"] {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.ibg-outreach-wrap .ibg-dropzone-file {
+	margin: 12px 0 0;
+	font-weight: 600;
+	position: relative;
+	z-index: 1;
+}
+
+.ibg-outreach-wrap .ibg-radio-row {
+	display: block;
+	margin-bottom: 6px;
+}
+
+.ibg-outreach-wrap .ibg-mapping-table {
+	max-width: 960px;
+}
+
+.ibg-outreach-wrap .ibg-samples {
+	color: #50575e;
+	font-size: 12px;
+}
+
+.ibg-outreach-wrap .ibg-inline-form {
+	margin-top: 12px;
+}
+
+.ibg-outreach-wrap .ibg-stat-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 12px;
+	margin: 12px 0 20px;
+}
+
+.ibg-outreach-wrap .ibg-stat {
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #f6f7f7;
+	text-align: center;
+}
+
+.ibg-outreach-wrap .ibg-stat-value {
+	display: block;
+	font-size: 24px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.ibg-outreach-wrap .ibg-stat-label {
+	display: block;
+	font-size: 12px;
+	color: #646970;
+	margin-top: 4px;
+}
+
+.ibg-outreach-wrap .ibg-stat-ok .ibg-stat-value {
+	color: #00a32a;
+}
+
+.ibg-outreach-wrap .ibg-stat-warning .ibg-stat-value {
+	color: #b45f06;
+}
+
+.ibg-outreach-wrap .ibg-stat-error .ibg-stat-value {
+	color: #d63638;
+}
+
+.ibg-outreach-wrap .ibg-plan-table {
+	max-width: 960px;
+	margin-bottom: 12px;
+}
+
+.ibg-outreach-wrap .ibg-plan-table th {
+	width: 220px;
+	text-align: left;
+	font-weight: 600;
+}
+
+.ibg-outreach-wrap .ibg-details {
+	margin-top: 12px;
+	max-width: 960px;
+}
+
+.ibg-outreach-wrap .ibg-details summary {
+	cursor: pointer;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+.ibg-outreach-wrap .ibg-progress {
+	height: 18px;
+	max-width: 960px;
+	background: #dcdcde;
+	border-radius: 9px;
+	overflow: hidden;
+	margin: 12px 0 8px;
+}
+
+.ibg-outreach-wrap .ibg-progress-bar {
+	height: 100%;
+	width: 0;
+	background: #2271b1;
+	transition: width 0.2s;
+}
+
+.ibg-outreach-wrap .ibg-status-error {
+	color: #d63638;
+	font-weight: 600;
+}
+
+/* Lists & segments */
+
+.ibg-outreach-wrap .ibg-card-narrow {
+	max-width: 960px;
+	margin-bottom: 20px;
+}
+
+.ibg-outreach-wrap .ibg-criteria {
+	font-size: 12px;
+	color: #50575e;
+}
+
+.ibg-outreach-wrap .ibg-multiselect {
+	min-width: 260px;
+}
+
+.ibg-outreach-wrap .ibg-checklist {
+	margin: 0;
+	max-height: 260px;
+	overflow-y: auto;
+}
+
+.ibg-outreach-wrap .ibg-checklist li {
+	margin: 0 0 6px;
+}
+
+.ibg-outreach-wrap #ibg-list-target {
+	margin-right: 6px;
+	vertical-align: top;
+}
+
+/* Templates */
+
+.ibg-outreach-wrap .ibg-empty-state {
+	margin: 16px 0;
+}
+
+.ibg-outreach-wrap .ibg-template-layout {
+	grid-template-columns: minmax(0, 1fr) 340px;
+}
+
+.ibg-outreach-wrap .ibg-tag-group {
+	margin: 14px 0 6px;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #646970;
+}
+
+.ibg-outreach-wrap .ibg-tag-list {
+	margin: 0;
+}
+
+.ibg-outreach-wrap .ibg-tag-list li {
+	margin: 0 0 4px;
+	font-size: 12px;
+}
+
+.ibg-outreach-wrap .ibg-tag-insert {
+	padding: 0;
+	text-decoration: none;
+}
+
+.ibg-outreach-wrap .ibg-tag-insert code {
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.ibg-outreach-wrap .ibg-tag-label {
+	color: #646970;
+	margin-left: 4px;
+}
+
+.ibg-outreach-wrap #ibg-preview-frame {
+	width: 100%;
+	height: 640px;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+.ibg-outreach-wrap #ibg-preview-card p label {
+	font-weight: 600;
+	margin-right: 6px;
+}

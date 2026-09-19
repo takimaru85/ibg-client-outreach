@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<ruleset name="IBG Client Outreach">
+	<description>WordPress Coding Standards for IBG Client Outreach.</description>
+
+	<file>.</file>
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/languages/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<config name="minimum_wp_version" value="6.4"/>
+	<config name="testVersion" value="8.1-"/>
+
+	<rule ref="WordPress"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="ibg-client-outreach"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="ibg_outreach"/>
+				<element value="IBG_OUTREACH"/>
+				<element value="IBG\Outreach"/>
+				<element value="ibg"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Short array syntax is not used; PHP 8.1 readonly promoted properties are allowed. -->
+	<rule ref="Universal.Arrays.DisallowShortArraySyntax"/>
+</ruleset>
