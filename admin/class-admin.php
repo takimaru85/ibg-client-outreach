@@ -8,6 +8,7 @@
 namespace IBG\Outreach\Admin;
 
 use IBG\Outreach\Activator;
+use IBG\Outreach\Admin\Pages\Campaigns_Page;
 use IBG\Outreach\Admin\Pages\Contacts_Page;
 use IBG\Outreach\Admin\Pages\Dashboard_Page;
 use IBG\Outreach\Admin\Pages\Import_Page;
@@ -66,6 +67,7 @@ final class Admin {
 		$this->menu->add_page( new Contacts_Page( $this->plugin, $this->notices ) );
 		$this->menu->add_page( new Import_Page( $this->plugin, $this->notices ) );
 		$this->menu->add_page( new Lists_Page( $this->plugin, $this->notices ) );
+		$this->menu->add_page( new Campaigns_Page( $this->plugin, $this->notices ) );
 		$this->menu->add_page( new Templates_Page( $this->plugin, $this->notices ) );
 		$this->menu->add_page( new Settings_Page( $this->plugin, $this->notices ) );
 

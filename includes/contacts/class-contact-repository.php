@@ -319,6 +319,26 @@ final class Contact_Repository {
 	}
 
 	/**
+	 * Ids of contacts matching the filters, in ascending id order, using
+	 * keyset pagination (stable while rows are inserted concurrently).
+	 *
+	 * @param array<string, mixed> $args     Filters (see build_conditions()).
+	 * @param int                  $after_id Only ids greater than this.
+	 * @param int                  $limit    Max ids.
+	 * @return int[]
+	 */
+	public function get_ids( array $args, int $after_id = 0, int $limit = 1000 ): array {
+		$wpdb = $this->db->wpdb();
+		list( $join, $where, $params ) = $this->build_conditions( $args );
+
+		$sql      = "SELECT c.id FROM {$this->db->table( 'contacts' )} c {$join} WHERE {$where} AND c.id > %d ORDER BY c.id ASC LIMIT %d";
+		$params[] = $after_id;
+		$params[] = max( 1, $limit );
+
+		return array_map( 'intval', (array) $wpdb->get_col( $wpdb->prepare( $sql, $params ) ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	}
+
+	/**
 	 * Count contacts matching the given filters.
 	 *
 	 * @param array<string, mixed> $args Filters (see build_conditions()).

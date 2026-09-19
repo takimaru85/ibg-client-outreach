@@ -11,6 +11,9 @@
 
 namespace IBG\Outreach;
 
+use IBG\Outreach\Campaigns\Audience_Resolver;
+use IBG\Outreach\Campaigns\Campaign_Repository;
+use IBG\Outreach\Campaigns\Campaign_Service;
 use IBG\Outreach\Contacts\Contact_Repository;
 use IBG\Outreach\Contacts\Contact_Service;
 use IBG\Outreach\Email\Email_Composer;
@@ -233,6 +236,31 @@ final class Plugin {
 				$p->get( 'lists' ),
 				$p->get( 'contacts' ),
 				$p->get( 'events' )
+			)
+		);
+
+		$this->register( 'campaigns', static fn( Plugin $p ): Campaign_Repository => new Campaign_Repository( $p->get( 'database' ) ) );
+
+		$this->register(
+			'audience',
+			static fn( Plugin $p ): Audience_Resolver => new Audience_Resolver(
+				$p->get( 'contacts' ),
+				$p->get( 'lists' ),
+				$p->get( 'list_service' )
+			)
+		);
+
+		$this->register(
+			'campaign_service',
+			static fn( Plugin $p ): Campaign_Service => new Campaign_Service(
+				$p->get( 'campaigns' ),
+				$p->get( 'templates' ),
+				$p->get( 'lists' ),
+				$p->get( 'audience' ),
+				$p->get( 'providers' ),
+				$p->get( 'settings' ),
+				$p->get( 'events' ),
+				$p->get( 'database' )
 			)
 		);
 
